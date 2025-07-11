@@ -1,82 +1,55 @@
-import { useState } from "react";
-import styles from "./JournalForm.module.css";
+// pages/journal.js
+import { useState, useEffect } from "react";
+import JournalForm from "../components/JournalForm";
+import JournalList from "../components/JournalList";
 
-export default function JournalForm({ onSubmit }) {
-  const [entry, setEntry] = useState({
-    authorName: "",
-    content: "",
-    mood: "happy",
-    partnerName: "",
-  });
+export default function JournalPage() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setEntry({ ...entry, [e.target.name]: e.target.value });
+  // Fetch entries on mount
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const fetchEntries = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/entries");
+      const data = await response.json();
+      setEntries(data);
+    } catch (error) {
+      console.error("Failed to fetch entries:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(entry);
-    setEntry((prev) => ({ ...prev, content: "" })); // Clear only content
+  const handleSubmit = async (entry) => {
+    console.log("Entry saved:");
+    try {
+      const response = await fetch("/api/entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(entry),
+      });
+      console.log("Entry saved:", entry);
+
+      if (response.ok) {
+        fetchEntries(); // Refresh the list
+      }
+    } catch (error) {
+      console.error("Failed to save entry:", error);
+    }
   };
 
   return (
-    <div className={styles.formContainer}>
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Your Name</label>
-          <input
-            type="text"
-            name="authorName"
-            value={entry.authorName}
-            onChange={handleChange}
-            className={styles.inputField}
-            required
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Partner's Name</label>
-          <input
-            type="text"
-            name="partnerName"
-            value={entry.partnerName}
-            onChange={handleChange}
-            className={styles.inputField}
-            required
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>How are you feeling?</label>
-          <select
-            name="mood"
-            value={entry.mood}
-            onChange={handleChange}
-            className={styles.selectField}
-          >
-            <option value="happy">Happy</option>
-            <option value="sad">Sad</option>
-            <option value="excited">Excited</option>
-            <option value="loved">Loved</option>
-            <option value="lonely">Lonely</option>
-          </select>
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Journal Entry</label>
-          <textarea
-            name="content"
-            value={entry.content}
-            onChange={handleChange}
-            className={styles.textareaField}
-            required
-          />
-        </div>
-
-        <button type="submit" className={styles.submitButton}>
-          Save Entry
-        </button>
-      </form>
+    <div className="journal-container">
+      <h1>Our Journal</h1>
+      <JournalForm onSubmit={handleSubmit} />
+      {loading ? <p>Loading entries...</p> : <JournalList entries={entries} />}
     </div>
   );
 }

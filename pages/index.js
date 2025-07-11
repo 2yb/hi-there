@@ -3,6 +3,8 @@ import styles from "../styles/Journal.module.css";
 
 export default function Home() {
   const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     authorName: "",
     partnerName: "",
@@ -10,11 +12,24 @@ export default function Home() {
     content: "",
   });
 
+  // Fetch entries from API
+  const fetchEntries = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/entries");
+      if (!response.ok) throw new Error("Failed to fetch entries");
+      const data = await response.json();
+      setEntries(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load entries on component mount
   useEffect(() => {
-    // Simulate loading entries
-    setTimeout(() => {
-      setEntries([]); // Empty array for "no entries" state
-    }, 500);
+    fetchEntries();
   }, []);
 
   const handleChange = (e) => {
@@ -24,14 +39,33 @@ export default function Home() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, you would save to your backend here
-    alert("Entry saved! (Backend not connected in this example)");
-    setFormData({
-      ...formData,
-      content: "",
-    });
+    try {
+      setLoading(true);
+
+      // Send data to API
+      const response = await fetch("/api/entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Failed to save entry");
+
+      // Clear form and refresh entries
+      setFormData((prev) => ({
+        ...prev,
+        content: "",
+      }));
+      await fetchEntries();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +73,7 @@ export default function Home() {
       <header className={styles.header}>
         <h1>Hi There!</h1>
         <p>Share your thoughts and feelings with your partner</p>
+        {error && <div className={styles.error}>{error}</div>}
       </header>
 
       <section className={styles.section}>
@@ -55,6 +90,7 @@ export default function Home() {
               onChange={handleChange}
               className={styles.inputField}
               required
+              disabled={loading}
             />
           </div>
 
@@ -67,6 +103,7 @@ export default function Home() {
               onChange={handleChange}
               className={styles.inputField}
               required
+              disabled={loading}
             />
           </div>
 
@@ -77,6 +114,7 @@ export default function Home() {
               value={formData.mood}
               onChange={handleChange}
               className={`${styles.inputField} ${styles.selectField}`}
+              disabled={loading}
             >
               <option value="happy">Happy</option>
               <option value="sad">Sad</option>
@@ -94,11 +132,16 @@ export default function Home() {
               onChange={handleChange}
               className={`${styles.inputField} ${styles.textareaField}`}
               required
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            Save Entry
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save Entry"}
           </button>
         </form>
       </section>
@@ -107,13 +150,15 @@ export default function Home() {
         <h2 className={styles.sectionTitle}>
           <span>📖</span> Our Journal
         </h2>
-        {entries.length > 0 ? (
+        {loading && entries.length === 0 ? (
+          <div className={styles.emptyState}>Loading entries...</div>
+        ) : entries.length > 0 ? (
           entries.map((entry) => (
-            <div key={entry.id} className={styles.entryCard}>
+            <div key={entry._id} className={styles.entryCard}>
               <div className={styles.entryHeader}>
                 <span className={styles.entryAuthor}>{entry.authorName}</span>
                 <span className={styles.entryDate}>
-                  {new Date(entry.date).toLocaleDateString()}
+                  {new Date(entry.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <div className={styles.moodIndicator}>

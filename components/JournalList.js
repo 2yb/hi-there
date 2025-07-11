@@ -19,7 +19,7 @@ export default function JournalList({ entries }) {
           <div className={styles.entryHeader}>
             <h3 className={styles.authorName}>{entry.authorName}</h3>
             <span className={styles.entryDate}>
-              {new Date(entry.date).toLocaleDateString()}
+              {new Date(entry.date || entry.createdAt).toLocaleDateString()}
             </span>
           </div>
 
