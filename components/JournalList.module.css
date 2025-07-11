@@ -1,0 +1,52 @@
+.entriesContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.entryCard {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.entryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.authorName {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1.1rem;
+}
+
+.entryDate {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.moodContainer {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.moodEmoji {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.moodText {
+  text-transform: capitalize;
+  color: #4a5568;
+}
+
+.entryContent {
+  color: #4a5568;
+  line-height: 1.6;
+  white-space: pre-line;
+}
